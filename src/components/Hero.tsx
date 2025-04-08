@@ -1,11 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 const Hero = () => {
   const [typedText, setTypedText] = useState('');
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const fullText = "Turn Images + Audio into Lifelike Avatars";
   
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   useEffect(() => {
     if (typedText === fullText) return;
     
@@ -16,9 +25,152 @@ const Hero = () => {
     return () => clearTimeout(timeout);
   }, [typedText, fullText]);
 
+  // Generate stable node positions - uniformly distributed left to right
+  const nodes = useMemo(() => {
+    const nodeCount = 50;
+    const rows = 5;
+    const cols = Math.ceil(nodeCount / rows);
+    const horizontalSpacing = 100 / (cols - 1);
+    const verticalSpacing = 100 / (rows - 1);
+    
+    return Array.from({ length: nodeCount }, (_, i) => {
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      // Add slight randomness to positions while maintaining grid
+      const x = col * horizontalSpacing + (Math.random() * 5 - 2.5);
+      const y = row * verticalSpacing + (Math.random() * 5 - 2.5);
+      
+      return {
+        id: i,
+        size: Math.random() * 4 + 2,
+        x: Math.max(0, Math.min(100, x)), // Keep within bounds
+        y: Math.max(0, Math.min(100, y)), // Keep within bounds
+        opacity: Math.random() * 0.4 + 0.6
+      };
+    });
+  }, []);
+
+  // Generate stable connections
+  const connections = useMemo(() => {
+    // Create more connections by connecting each node to 2 others
+    const conns = [];
+    for (let i = 0; i < nodes.length; i++) {
+      // Connect to next node
+      conns.push({
+        from: nodes[i],
+        to: nodes[(i + 1) % nodes.length],
+        width: Math.random() * 0.8 + 0.4
+      });
+      // Connect to another random node
+      if (i % 2 === 0) {
+        const randomIndex = Math.floor(Math.random() * nodes.length);
+        if (randomIndex !== i) {
+          conns.push({
+            from: nodes[i],
+            to: nodes[randomIndex],
+            width: Math.random() * 0.6 + 0.3
+          });
+        }
+      }
+    }
+    return conns;
+  }, [nodes]);
+
   return (
     <section className="min-h-screen pt-32 pb-16 relative overflow-hidden">
-      {/* Background Elements */}
+      {/* Enhanced Neural Network Effect */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        pointerEvents: 'none',
+        zIndex: 0,
+        overflow: 'hidden',
+        background: 'radial-gradient(circle at center, rgba(63, 81, 181, 0.03) 0%, transparent 70%)',
+        transition: 'background 1.5s linear'
+      }}>
+        {/* Neural nodes - more visible with glow */}
+        {nodes.map((node) => {
+          // Increased movement factors from /40 to /25 for stronger response
+          const dx = (mousePosition.x - window.innerWidth/2) / 15;
+          const dy = (mousePosition.y - window.innerHeight/2) / 15;
+          
+          return (
+            <div 
+              key={node.id}
+              style={{
+                position: 'absolute',
+                left: `${node.x}%`,
+                top: `${node.y}%`,
+                width: `${node.size}px`,
+                height: `${node.size}px`,
+                borderRadius: '50%',
+                backgroundColor: `rgba(156, 39, 176, ${node.opacity})`,
+                transform: `translate(${dx}px, ${dy}px)`,
+                transition: 'transform 1.8s cubic-bezier(0.16, 0.73, 0.58, 0.99)',
+                boxShadow: `0 0 15px rgba(156, 39, 176, ${node.opacity * 0.7})`,
+                zIndex: 2
+              }}
+            />
+          );
+        })}
+        
+        {/* Neural connections - more visible with proper axons */}
+        <svg 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            opacity: 0.45
+          }}
+        >
+          {connections.map((conn, i) => {
+            // Increased movement factors from /50 and /60 to /35 and /45
+            const dx1 = (mousePosition.x - window.innerWidth/2) / 35;
+            const dy1 = (mousePosition.y - window.innerHeight/2) / 35;
+            const dx2 = (mousePosition.x - window.innerWidth/2) / 45;
+            const dy2 = (mousePosition.y - window.innerHeight/2) / 45;
+            
+            return (
+              <line
+                key={i}
+                x1={`${conn.from.x}%`}
+                y1={`${conn.from.y}%`}
+                x2={`${conn.to.x}%`}
+                y2={`${conn.to.y}%`}
+                stroke="rgba(156, 39, 176, 0.5)"
+                strokeWidth={conn.width}
+                strokeLinecap="round"
+                style={{
+                  transform: `translate(${(dx1 + dx2)/2.5}px, ${(dy1 + dy2)/2.5}px)`,
+                  transition: 'transform 2s cubic-bezier(0.16, 0.73, 0.58, 0.99)',
+                  filter: 'drop-shadow(0 0 2px rgba(156, 39, 176, 0.5))'
+                }}
+              />
+            );
+          })}
+        </svg>
+
+        {/* Additional subtle radial glow that follows mouse */}
+        <div style={{
+          position: 'absolute',
+          left: `${(mousePosition.x / window.innerWidth) * 100}%`,
+          top: `${(mousePosition.y / window.innerHeight) * 100}%`,
+          width: '350px',
+          height: '350px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(156, 39, 176, 0.08) 0%, transparent 70%)',
+          transform: 'translate(-50%, -50%)',
+          transition: 'all 2.5s linear',
+          pointerEvents: 'none'
+        }} />
+      </div>
+
+      {/* Rest of your existing content remains exactly the same */}
       <div className="absolute inset-0 opacity-20 bg-noise mix-blend-overlay pointer-events-none"></div>
       <div className="absolute top-1/3 -left-20 w-60 h-60 rounded-full bg-primary/20 filter blur-3xl"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 rounded-full bg-neon-purple/20 filter blur-3xl"></div>
@@ -33,22 +185,18 @@ const Hero = () => {
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 color: 'transparent',
-                transition: 'all 0.35s cubic-bezier(0.19, 1, 0.22, 1)',
-                textShadow: '0 0 6px rgba(156, 39, 176, 0.15)',
-                willChange: 'transform, text-shadow',
-                transform: 'translateZ(0)'
+                transition: 'all 0.3s ease',
+                textShadow: '0 0 8px rgba(156, 39, 176, 0.3)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.03) translateZ(0)';
-                e.currentTarget.style.textShadow = `
-                  0 0 8px rgba(156, 39, 176, 0.25),
-                  0 0 12px rgba(156, 39, 176, 0.15),
-                  0 0 18px rgba(156, 39, 176, 0.1)
-                `;
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.textShadow = '0 0 10px rgba(156, 39, 176, 0.5), 0 0 20px rgba(156, 39, 176, 0.2)';
+                e.currentTarget.style.filter = 'brightness(1.05)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1) translateZ(0)';
-                e.currentTarget.style.textShadow = '0 0 6px rgba(156, 39, 176, 0.15)';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.textShadow = '0 0 8px rgba(156, 39, 176, 0.3)';
+                e.currentTarget.style.filter = 'brightness(1)';
               }}
             >
               TwinSpeak:
@@ -71,7 +219,6 @@ const Hero = () => {
             </Button>
           </div>
           
-          {/* Avatar Preview Circle */}
           <div className="relative mx-auto mb-12">
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-neon-teal to-neon-blue opacity-50 blur-lg animate-pulse-glow"></div>
             <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto rounded-full border border-primary/30 overflow-hidden bg-black">
@@ -82,7 +229,6 @@ const Hero = () => {
             </div>
           </div>
           
-          {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {[
               { value: "10 sec", label: "Processing Time" },
