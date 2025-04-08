@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 const Hero = () => {
   const [typedText, setTypedText] = useState('');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [twinSpeakLetters, setTwinSpeakLetters] = useState<string[]>([]);
   const fullText = "Turn Images + Audio into Lifelike Avatars";
+  const brandName = "TTwinSpeak:";
+  const animationStarted = useRef(false);
   
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -25,7 +28,24 @@ const Hero = () => {
     return () => clearTimeout(timeout);
   }, [typedText, fullText]);
 
-  // Generate stable node positions - uniformly distributed left to right
+  useEffect(() => {
+    if (!animationStarted.current) {
+      animationStarted.current = true;
+      let currentIndex = 0;
+      const interval = setInterval(() => {
+        if (currentIndex < brandName.length) {
+          setTwinSpeakLetters(prev => [...prev, brandName[currentIndex]]);
+          currentIndex++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 170);
+      
+      return () => clearInterval(interval);
+    }
+  }, []);
+
+  // Generate stable node positions
   const nodes = useMemo(() => {
     const nodeCount = 50;
     const rows = 5;
@@ -36,15 +56,14 @@ const Hero = () => {
     return Array.from({ length: nodeCount }, (_, i) => {
       const row = Math.floor(i / cols);
       const col = i % cols;
-      // Add slight randomness to positions while maintaining grid
       const x = col * horizontalSpacing + (Math.random() * 5 - 2.5);
       const y = row * verticalSpacing + (Math.random() * 5 - 2.5);
       
       return {
         id: i,
         size: Math.random() * 4 + 2,
-        x: Math.max(0, Math.min(100, x)), // Keep within bounds
-        y: Math.max(0, Math.min(100, y)), // Keep within bounds
+        x: Math.max(0, Math.min(100, x)),
+        y: Math.max(0, Math.min(100, y)),
         opacity: Math.random() * 0.4 + 0.6
       };
     });
@@ -52,16 +71,13 @@ const Hero = () => {
 
   // Generate stable connections
   const connections = useMemo(() => {
-    // Create more connections by connecting each node to 2 others
     const conns = [];
     for (let i = 0; i < nodes.length; i++) {
-      // Connect to next node
       conns.push({
         from: nodes[i],
         to: nodes[(i + 1) % nodes.length],
         width: Math.random() * 0.8 + 0.4
       });
-      // Connect to another random node
       if (i % 2 === 0) {
         const randomIndex = Math.floor(Math.random() * nodes.length);
         if (randomIndex !== i) {
@@ -78,7 +94,7 @@ const Hero = () => {
 
   return (
     <section className="min-h-screen pt-32 pb-16 relative overflow-hidden">
-      {/* Enhanced Neural Network Effect */}
+      {/* Neural Network Background */}
       <div style={{
         position: 'fixed',
         top: 0,
@@ -91,9 +107,7 @@ const Hero = () => {
         background: 'radial-gradient(circle at center, rgba(63, 81, 181, 0.03) 0%, transparent 70%)',
         transition: 'background 1.5s linear'
       }}>
-        {/* Neural nodes - more visible with glow */}
         {nodes.map((node) => {
-          // Increased movement factors from /40 to /25 for stronger response
           const dx = (mousePosition.x - window.innerWidth/2) / 15;
           const dy = (mousePosition.y - window.innerHeight/2) / 15;
           
@@ -117,19 +131,15 @@ const Hero = () => {
           );
         })}
         
-        {/* Neural connections - more visible with proper axons */}
-        <svg 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            opacity: 0.45
-          }}
-        >
+        <svg style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          opacity: 0.45
+        }}>
           {connections.map((conn, i) => {
-            // Increased movement factors from /50 and /60 to /35 and /45
             const dx1 = (mousePosition.x - window.innerWidth/2) / 35;
             const dy1 = (mousePosition.y - window.innerHeight/2) / 35;
             const dx2 = (mousePosition.x - window.innerWidth/2) / 45;
@@ -155,7 +165,6 @@ const Hero = () => {
           })}
         </svg>
 
-        {/* Additional subtle radial glow that follows mouse */}
         <div style={{
           position: 'absolute',
           left: `${(mousePosition.x / window.innerWidth) * 100}%`,
@@ -170,7 +179,6 @@ const Hero = () => {
         }} />
       </div>
 
-      {/* Rest of your existing content remains exactly the same */}
       <div className="absolute inset-0 opacity-20 bg-noise mix-blend-overlay pointer-events-none"></div>
       <div className="absolute top-1/3 -left-20 w-60 h-60 rounded-full bg-primary/20 filter blur-3xl"></div>
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 rounded-full bg-neon-purple/20 filter blur-3xl"></div>
@@ -199,7 +207,7 @@ const Hero = () => {
                 e.currentTarget.style.filter = 'brightness(1)';
               }}
             >
-              TwinSpeak:
+              {twinSpeakLetters.join('')}
             </span>
             <br />
             <span className="text-white">AI-Powered Video Avatar Generator</span>
