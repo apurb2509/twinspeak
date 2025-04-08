@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -27,7 +26,33 @@ const Hero = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="mb-6 text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-            <span className="inline-block gradient-text">Nexus Avatar:</span>
+            <span 
+              style={{
+                display: 'inline-block',
+                background: 'linear-gradient(90deg, #3f51b5, #9c27b0)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                color: 'transparent',
+                transition: 'all 0.35s cubic-bezier(0.19, 1, 0.22, 1)',
+                textShadow: '0 0 6px rgba(156, 39, 176, 0.15)',
+                willChange: 'transform, text-shadow',
+                transform: 'translateZ(0)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.03) translateZ(0)';
+                e.currentTarget.style.textShadow = `
+                  0 0 8px rgba(156, 39, 176, 0.25),
+                  0 0 12px rgba(156, 39, 176, 0.15),
+                  0 0 18px rgba(156, 39, 176, 0.1)
+                `;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1) translateZ(0)';
+                e.currentTarget.style.textShadow = '0 0 6px rgba(156, 39, 176, 0.15)';
+              }}
+            >
+              TwinSpeak:
+            </span>
             <br />
             <span className="text-white">AI-Powered Video Avatar Generator</span>
           </h1>
