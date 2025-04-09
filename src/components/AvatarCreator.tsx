@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -94,7 +93,7 @@ const AvatarCreator = () => {
           </p>
         </div>
         
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* Step Indicator */}
           <div className="flex justify-between mb-8 relative">
             <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-700 -translate-y-1/2 z-0"></div>
@@ -114,23 +113,63 @@ const AvatarCreator = () => {
               <>
                 <h3 className="text-2xl font-semibold mb-6">Upload Files</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FileUpload 
-                    title="Upload Image" 
-                    description="PNG/JPG, min. 512x512px" 
-                    accept="image/*"
-                    onFileSelected={handleImageUpload}
-                    preview={imageFile?.preview}
-                  />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
+                  <div className="border-2 border-primary/30 rounded-xl p-6 bg-black/30 flex flex-col justify-center items-center h-full">
+                    <FileUpload 
+                      title="Upload Image" 
+                      description="PNG/JPG, min. 512x512px" 
+                      accept="image/*"
+                      onFileSelected={handleImageUpload}
+                      preview={imageFile?.preview}
+                    />
+                  </div>
                   
-                  <FileUpload 
-                    title="Upload Audio" 
-                    description="MP3/WAV, 5-30 seconds"
-                    accept="audio/*"
-                    onFileSelected={handleAudioUpload}
-                    preview={audioFile?.preview}
-                    isAudio
-                  />
+                  <div className="border-2 border-primary/30 rounded-xl p-6 bg-black/30 flex flex-col justify-center items-center h-full">
+                    <FileUpload 
+                      title="Upload Audio" 
+                      description="MP3/WAV, 5-30 seconds"
+                      accept="audio/*"
+                      onFileSelected={handleAudioUpload}
+                      preview={audioFile?.preview}
+                      isAudio
+                    />
+                  </div>
+                  
+                  {/* Enhanced Result Preview Section */}
+                  <div className="border-2 border-primary/30 rounded-xl p-6 bg-black/30 flex flex-col justify-center items-center h-full">
+                    <h4 className="font-medium text-xl mb-6 text-center">Avatar Preview</h4>
+                    <div className="flex-1 flex flex-col items-center justify-center space-y-6">
+                      {imageFile ? (
+                        <div className="relative w-64 h-64 rounded-full overflow-hidden border-4 border-primary/50">
+                          <img 
+                            src={imageFile.preview} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover" 
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-64 h-64 rounded-full bg-gray-800 flex items-center justify-center">
+                          <span className="text-gray-500 text-center p-4">Your talking avatar will appear here after generation</span>
+                        </div>
+                      )}
+                      
+                      <div className="w-full">
+                        {audioFile ? (
+                          <div className="space-y-2">
+                            <h5 className="text-sm font-medium text-center">Audio Preview</h5>
+                            <audio controls className="w-full">
+                              <source src={audioFile.preview} type={audioFile.file.type} />
+                              Your browser does not support the audio element.
+                            </audio>
+                          </div>
+                        ) : (
+                          <div className="w-full h-16 bg-gray-800 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-500">Audio preview will appear here</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mt-8 flex justify-between">
@@ -150,53 +189,64 @@ const AvatarCreator = () => {
               <>
                 <h3 className="text-2xl font-semibold mb-6">Configure Avatar</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Avatar Style</h4>
-                    <Tabs defaultValue="neutral" value={avatarStyle} onValueChange={(v) => setAvatarStyle(v as AvatarStyle)}>
-                      <TabsList className="w-full bg-black/60 border border-white/10">
-                        <TabsTrigger value="neutral" className="flex-1">Neutral</TabsTrigger>
-                        <TabsTrigger value="smiling" className="flex-1">Smiling</TabsTrigger>
-                        <TabsTrigger value="professional" className="flex-1">Professional</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                    
-                    <h4 className="font-medium pt-4">Voice Options</h4>
-                    <Tabs defaultValue="original" value={voiceOption} onValueChange={(v) => setVoiceOption(v as VoiceOption)}>
-                      <TabsList className="w-full bg-black/60 border border-white/10">
-                        <TabsTrigger value="original" className="flex-1">Original (Cloned)</TabsTrigger>
-                        <TabsTrigger value="synthetic" className="flex-1">Synthetic (TTS)</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-                  
-                  <div className="flex flex-col justify-center items-center">
-                    <div className="relative w-40 h-40 rounded-full overflow-hidden border border-primary/30 mb-4">
-                      {imageFile && (
-                        <img 
-                          src={imageFile.preview} 
-                          alt="Preview" 
-                          className="w-full h-full object-cover" 
-                        />
-                      )}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Avatar Style</h4>
+                      <Tabs defaultValue="neutral" value={avatarStyle} onValueChange={(v) => setAvatarStyle(v as AvatarStyle)}>
+                        <TabsList className="w-full bg-black/60 border border-white/10">
+                          <TabsTrigger value="neutral" className="flex-1">Neutral</TabsTrigger>
+                          <TabsTrigger value="smiling" className="flex-1">Smiling</TabsTrigger>
+                          <TabsTrigger value="professional" className="flex-1">Professional</TabsTrigger>
+                        </TabsList>
+                      </Tabs>
                     </div>
                     
-                    {audioFile && (
-                      <audio controls className="w-full">
-                        <source src={audioFile.preview} type={audioFile.file.type} />
-                        Your browser does not support the audio element.
-                      </audio>
-                    )}
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Voice Options</h4>
+                      <Tabs defaultValue="original" value={voiceOption} onValueChange={(v) => setVoiceOption(v as VoiceOption)}>
+                        <TabsList className="w-full bg-black/60 border border-white/10">
+                          <TabsTrigger value="original" className="flex-1">Original (Cloned)</TabsTrigger>
+                          <TabsTrigger value="synthetic" className="flex-1">Synthetic (TTS)</TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Settings className="w-5 h-5 text-primary" />
+                      <h4 className="font-medium">Advanced Settings</h4>
+                    </div>
+                    
+                    <div className="p-4 bg-white/5 rounded-lg">
+                      <p className="text-gray-400 text-sm">Background locked to Pure Black (#000000) for optimal visual experience.</p>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center gap-2 mb-8">
-                  <Settings className="w-5 h-5 text-primary" />
-                  <h4 className="font-medium">Advanced Settings</h4>
-                </div>
-                
-                <div className="p-4 bg-white/5 rounded-lg mb-8">
-                  <p className="text-gray-400 text-sm">Background locked to Pure Black (#000000) for optimal visual experience.</p>
+                  
+                  {/* Enhanced Preview Section */}
+                  <div className="border-2 border-primary/30 rounded-xl p-6 bg-black/30 flex flex-col justify-center items-center h-full">
+                    <h4 className="font-medium text-xl mb-6 text-center">Preview</h4>
+                    <div className="flex flex-col items-center justify-center space-y-6">
+                      <div className="relative w-64 h-64 rounded-full overflow-hidden border-4 border-primary/50">
+                        {imageFile && (
+                          <img 
+                            src={imageFile.preview} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover" 
+                          />
+                        )}
+                      </div>
+                      
+                      {audioFile && (
+                        <div className="w-full space-y-2">
+                          <h5 className="text-sm font-medium text-center">Audio Preview</h5>
+                          <audio controls className="w-full">
+                            <source src={audioFile.preview} type={audioFile.file.type} />
+                            Your browser does not support the audio element.
+                          </audio>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-between">
@@ -241,7 +291,35 @@ const AvatarCreator = () => {
               <>
                 <h3 className="text-2xl font-semibold mb-6">Your Avatar is Ready!</h3>
                 
-                <VideoPreview videoUrl={videoUrl} />
+                <div className="flex flex-col lg:flex-row gap-8">
+                  <div className="lg:w-2/3">
+                    <VideoPreview videoUrl={videoUrl} />
+                  </div>
+                  <div className="lg:w-1/3 border-2 border-primary/30 rounded-xl p-6 bg-black/30 flex flex-col justify-center items-center">
+                    <h4 className="font-medium text-xl mb-4 text-center">Share Your Creation</h4>
+                    <div className="space-y-4 w-full">
+                      <div className="space-y-2 flex flex-col items-center">
+                        <h5 className="font-medium">Original Image</h5>
+                        {imageFile && (
+                          <img 
+                            src={imageFile.preview} 
+                            alt="Original" 
+                            className="w-32 h-32 rounded-lg object-cover" 
+                          />
+                        )}
+                      </div>
+                      <div className="space-y-2 w-full">
+                        <h5 className="font-medium text-center">Audio Used</h5>
+                        {audioFile && (
+                          <audio controls className="w-full">
+                            <source src={audioFile.preview} type={audioFile.file.type} />
+                            Your browser does not support the audio element.
+                          </audio>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="mt-8 flex flex-wrap gap-4 justify-center">
                   <Button className="bg-primary text-primary-foreground flex items-center gap-2">
