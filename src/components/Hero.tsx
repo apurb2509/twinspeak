@@ -6,8 +6,8 @@ const Hero = () => {
   const [typedText, setTypedText] = useState('');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [twinSpeakLetters, setTwinSpeakLetters] = useState<string[]>([]);
-  const fullText = "Turn Images + Audio into Lifelike Avatars";
-  const brandName = "TTwinSpeak:";
+  const fullText = "Turn Images & Audio into Lifelike Avatars";
+  const brandName = "TTwinSpeak";
   const animationStarted = useRef(false);
   
   useEffect(() => {
