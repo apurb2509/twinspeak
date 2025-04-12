@@ -1,93 +1,99 @@
 // src/index.ts
+import dotenv from 'dotenv';
+dotenv.config();
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
-import axios from 'axios';
+import multer, { FileFilterCallback } from 'multer';
+import fs from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const corsOptions = {origin: "http://localhost:8080"};
+
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Define types for request bodies
-interface GenerateVideoRequest {
-  imageUrl: string;
+// --- Cloudinary config ---
+cloudinary.config({ 
+  cloud_name: process.env.CLOUD_NAME, 
+  api_key: process.env.API_KEY, 
+  api_secret: process.env.API_SECRET
+});
+console.log('Cloudinary Config:', {
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET ? '***' : 'Missing'
+});
+// --- Multer setup for file upload ---
+const tempUploadsDir = path.join(__dirname, 'temp-uploads');
+
+if (!fs.existsSync(tempUploadsDir)) {
+  fs.mkdirSync(tempUploadsDir, { recursive: true });
 }
 
-// API Routes
-app.post('/api/generate-video', async (req: Request res: Response) => {
-  try {
-    const { imageUrl } = req.body;
-    
-    if (!imageUrl) {
-      return res.status(400).json({ error: 'Image URL is required' });
-    }
-    
-    // Make request to 3rd party API
-    const response = await axios.post('https://your-third-party-api.com/generate', {
-      image_url: imageUrl,
-      // Add any other parameters required by the 3rd party API
-    }, {
-      headers: {
-        'Authorization': `Bearer ${process.env.API_KEY}`, // If API requires authentication
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    // Return the video URL or data from the 3rd party API
-    res.json({ 
-      success: true,
-      videoUrl: response.data.video_url, // Adjust based on actual API response structure
-      videoData: response.data // Include any other relevant data
-    });
-    
-  } catch (error: any) {
-    console.error('Error generating video:', error);
-    res.status(500).json({ 
-      error: 'Failed to generate video', 
-      details: error.message 
-    });
+const storage = multer.diskStorage({
+  destination: function (_req, _file, cb) {
+    cb(null, tempUploadsDir);
+  },
+  filename: function (_req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
   }
 });
 
-// If in production, serve the React build files
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../../dist')));
-  
-  app.get('*', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../../dist', 'index.html'));
-  });
-}
 
-const options = {
-  method: 'POST',
-  url: 'https://api.aivideoapi.com/runway/generate/image',
-  headers: {
-    accept: 'application/json',
-    'content-type': 'application/json',
-    Authorization: '15ea159b60e284d72bb08a3e04ca6b543'
-  },
-  data: {
-    img_prompt: 'https://files.aigen.video/imgs/ocean.jpg',
-    model: 'gen3',
-    image_as_end_frame: false,
-    flip: false,
-    motion: 5,
-    seed: 0,
-    callback_url: '',
-    time: 5
+// Accept only image files
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'));
   }
 };
 
-axios
-  .request(options)
-  .then(res => console.log(res.data))
-  .catch(err => console.error(err));
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  }
+});
 
+// --- Upload endpoint ---
+app.post('/upload', upload.single('image'), async (req: Request, res: Response) => {
+  try {
+    const filePath = req.file?.path;
 
+    if (!filePath) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Upload image to Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(filePath, {
+      folder: 'temp-uploads',
+    });
+
+    // Delete temp file after upload
+    fs.unlinkSync(filePath);
+
+    res.status(200).json({
+      message: 'Image uploaded successfully',
+      imageUrl: uploadResult.secure_url,
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Image upload failed' });
+  }
+  return imageUrl;
+});
+
+// --- Start server ---
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
